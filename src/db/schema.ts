@@ -1,4 +1,4 @@
-import { mysqlTable, serial, varchar, timestamp } from 'drizzle-orm/mysql-core';
+import { mysqlTable, serial, varchar, timestamp, bigint } from 'drizzle-orm/mysql-core';
 import { createSelectSchema, createInsertSchema } from 'drizzle-typebox';
 
 export const users = mysqlTable('users', {
@@ -10,6 +10,14 @@ export const users = mysqlTable('users', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 });
 
+export const sessions = mysqlTable('sessions', {
+  id: serial('id').primaryKey(),
+  token: varchar('token', { length: 255 }).notNull(),
+  userId: bigint('user_id', { mode: 'number', unsigned: true }).notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // TypeBox schemas for validation
 export const selectUserSchema = createSelectSchema(users);
 export const insertUserSchema = createInsertSchema(users);
+export const insertSessionSchema = createInsertSchema(sessions);
