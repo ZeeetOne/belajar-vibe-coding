@@ -72,4 +72,32 @@ export const usersService = {
 
     return { data: token };
   },
+
+  async getCurrentUser(token: string) {
+    // 1. Find session by token
+    const session = await db.query.sessions.findFirst({
+      where: eq(sessions.token, token),
+    });
+
+    if (!session) {
+      return { error: 'Unauthorized' };
+    }
+
+    // 2. Find user by userId from session
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, session.userId),
+      columns: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return { error: 'Unauthorized' };
+    }
+
+    return { data: user };
+  },
 };
