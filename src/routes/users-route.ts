@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { usersService } from '../services/users-service';
+import { auth } from '../middlewares/auth';
 
 export const usersRoute = new Elysia({ prefix: '/api/users' })
   .post('/', async ({ body, set }) => {
@@ -33,38 +34,25 @@ export const usersRoute = new Elysia({ prefix: '/api/users' })
       password: t.String(),
     })
   })
-  .get('/current', async ({ headers, set }) => {
-    const authHeader = headers['authorization'];
+  .use(auth)
+  .get('/current', async ({ token, unauthorized }) => {
+    if (!token) return unauthorized();
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      set.status = 401;
-      return { error: 'Unauthorized' };
-    }
-
-    const token = authHeader.split(' ')[1];
     const result = await usersService.getCurrentUser(token);
 
     if (result.error) {
-      set.status = 401;
-      return result;
+      return unauthorized();
     }
 
     return result;
   })
-  .delete('/logout', async ({ headers, set }) => {
-    const authHeader = headers['authorization'];
+  .delete('/logout', async ({ token, unauthorized }) => {
+    if (!token) return unauthorized();
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      set.status = 401;
-      return { error: 'Unauthorized' };
-    }
-
-    const token = authHeader.split(' ')[1];
     const result = await usersService.logoutUser(token);
 
     if (result.error) {
-      set.status = 401;
-      return result;
+      return unauthorized();
     }
 
     return result;
